@@ -13,6 +13,18 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
+function reply_email(email) {
+  console.log(email)
+  compose_email();
+
+  
+    document.querySelector('#compose-recipients').value = email.sender;
+    document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
+    document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n----------------------------------------------------------------------------------------------------------------------------\n`;
+
+  
+}
+
 function arhcive_email() {
   const email = document.querySelector('.subject')
   let id = email.dataset.id
@@ -95,7 +107,7 @@ function openEmail(event) {
   .then(response => response.json())
   .then(email => {
     // Print email
-    console.log(email);
+    //console.log(email);
     if (email.read) {
       fetch(`/emails/${id}`, {
         method: 'PUT',
@@ -112,22 +124,30 @@ function openEmail(event) {
     emailDetail = document.createElement('div');
     document.querySelector('#email').innerHTML = ""
     if (email.archived) {
-      emailDetail.innerHTML = `<div>From: ${email.sender}</div>
+      emailDetail.innerHTML = `<div class="sender">From: ${email.sender}</div>
                             <div class="subject" data-id="${id}">Subject: ${email.subject}</div>
-                            <div>${email.body}</div>
-                            <button class="archive">Unarchive</button>`
+                            <div class="body">${email.body}</div>
+                            <button class="archive">Unarchive</button>
+                            <button class="reply">Reply</button>`
     document.querySelector('#email').append(emailDetail) 
     }
     else{
       emailDetail.innerHTML = `<div>From: ${email.sender}</div>
                             <div class="subject" data-id="${id}">Subject: ${email.subject}</div>
                             <div>${email.body}</div>
-                            <button class="archive">Archive</button>`
+                            <button class="archive">Archive</button>
+                            <button class="reply">Reply</button>`
     document.querySelector('#email').append(emailDetail) 
     }
 
     // Listen for archive button
     document.querySelector('.archive').onclick = arhcive_email
+
+    // Listen for replay button
+    document.querySelector('.reply').addEventListener('click', () => {
+      reply_email(email)
+    });
+
 
 });
 
