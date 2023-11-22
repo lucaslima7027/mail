@@ -18,6 +18,7 @@ function compose_email() {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#email').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -52,12 +53,48 @@ function sent_email() {
   return false;
 }
 
+function openEmail(event) {
+  let email = event.currentTarget
+  email = email.querySelector('.subjectTile')
+  const id = email.dataset.id
+  //console.log(id)
+
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+    // Print email
+    //console.log(email);
+    if (email.read) {
+      fetch(`/emails/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            read: false
+        })
+      })
+    }
+    // Hide emails-view and show email
+    document.querySelector('#emails-view').style.display = 'none';
+    document.querySelector('#email').style.display = 'block';
+
+    emailDetail = document.createElement('div');
+    document.querySelector('#email').innerHTML = ""
+    emailDetail.innerHTML = `<div>From: ${email.sender}</div>
+                            <div>Subject: ${email.subject}</div>
+                            <div>${email.body}</div>`
+    document.querySelector('#email').append(emailDetail)
+
+});
+
+  
+}
+
 
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -67,11 +104,16 @@ function load_mailbox(mailbox) {
   .then(response => response.json())
   .then(emails => {
     // Print emails
-    // console.log(emails);
-    emails.forEach(element => {
-      emailTile = document.createElement('div')
-      emailTile.innerHTML = `${element.sender}|<span>${element.subject}</span>`
-      document.querySelector('#emails-view').append(emailTile)
+    //console.log(emails)
+      emails.forEach(element => {
+      emailTile = document.createElement('div');
+      emailTile.className = 'emailTile';
+      if (!element.read){
+        emailTile.classList.add('read');
+      }
+      emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
+      document.querySelector('#emails-view').append(emailTile);
+      emailTile.onclick = openEmail
     });
     // ... do something else with emails ...
 });
