@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function reply_email(email) {
-  console.log(email)
+  //console.log(email)
   compose_email();
 
   
@@ -28,7 +28,7 @@ function reply_email(email) {
 function arhcive_email() {
   const email = document.querySelector('.subject')
   let id = email.dataset.id
-  console.log(id)
+  //console.log(id)
 
   fetch(`/emails/${id}`)
   .then(response => response.json())
@@ -77,7 +77,7 @@ function sent_email() {
   const recipients = document.querySelector('#compose-recipients').value;
   const subject = document.querySelector('#compose-subject').value;
   const body = document.querySelector('#compose-body').value;
-  console.log(recipients, subject, body)
+  //console.log(recipients, subject, body)
 
 // Post email
   fetch('/emails', {
@@ -91,7 +91,7 @@ function sent_email() {
   .then(response => response.json())
   .then(result => {
       // Print result
-      console.log(result);
+      //console.log(result);
       load_mailbox('sent');
   });
   return false;
@@ -108,11 +108,11 @@ function openEmail(event) {
   .then(email => {
     // Print email
     //console.log(email);
-    if (email.read) {
+    if (!email.read) {
       fetch(`/emails/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
-            read: false
+            read: true
         })
       })
     }
@@ -179,7 +179,8 @@ function load_mailbox(mailbox) {
         if (element.archived) {
           emailTile = document.createElement('div');
           emailTile.className = 'emailTile';
-        if (!element.read){
+          //console.log(element.read)
+        if (element.read){
           emailTile.classList.add('read');
         }
         emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
@@ -192,7 +193,8 @@ function load_mailbox(mailbox) {
       emails.forEach(element => {
         emailTile = document.createElement('div');
         emailTile.className = 'emailTile';
-        if (!element.read){
+        //console.log(element.read)
+        if (element.read){
           emailTile.classList.add('read');
         }
         emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
