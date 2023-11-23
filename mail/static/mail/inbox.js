@@ -25,36 +25,22 @@ function reply_email(email) {
   
 }
 
-function arhcive_email() {
-  const email = document.querySelector('.subject')
-  let id = email.dataset.id
+function archive_email(email) {
   //console.log(id)
-
-  fetch(`/emails/${id}`)
-  .then(response => response.json())
-  .then(email => {
-    if (email.archived) {
-      fetch(`/emails/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-            archived: false
-        })
-      })
-      load_mailbox('inbox')
-    }
-    else{
-      fetch(`/emails/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-            archived: true
-        })
-      })
-      load_mailbox('archive');
-    }
+  let archived = true
+  if (email.archived) {
+    archived = false
+  }
+  
+  fetch(`/emails/${email.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+        archived: archived
+    })
   })
-  
-  
-  
+
+  load_mailbox('inbox');
+  location.reload() 
 }
 
 function compose_email() {
@@ -106,7 +92,6 @@ function openEmail(event) {
   fetch(`/emails/${id}`)
   .then(response => response.json())
   .then(email => {
-    // Print email
     //console.log(email);
     if (!email.read) {
       fetch(`/emails/${id}`, {
@@ -123,35 +108,31 @@ function openEmail(event) {
 
     emailDetail = document.createElement('div');
     document.querySelector('#email').innerHTML = ""
-    if (email.archived) {
-      emailDetail.innerHTML = `<div class="sender">From: ${email.sender}</div>
+
+    emailDetail.innerHTML = `<div class="sender">From: ${email.sender}</div>
                             <div class="subject" data-id="${id}">Subject: ${email.subject}</div>
                             <div class="body">${email.body}</div>
-                            <button class="archive">Unarchive</button>
                             <button class="reply">Reply</button>`
-    document.querySelector('#email').append(emailDetail) 
+    if (email.archived) {
+      emailDetail.innerHTML += `<button class="archive">Unarchive</button>`
+    } 
+    
+    else {
+      emailDetail.innerHTML += `<button class="archive">Archive</button>`
     }
-    else{
-      emailDetail.innerHTML = `<div>From: ${email.sender}</div>
-                            <div class="subject" data-id="${id}">Subject: ${email.subject}</div>
-                            <div>${email.body}</div>
-                            <button class="archive">Archive</button>
-                            <button class="reply">Reply</button>`
-    document.querySelector('#email').append(emailDetail) 
-    }
-
-    // Listen for archive button
-    document.querySelector('.archive').onclick = arhcive_email
-
-    // Listen for replay button
-    document.querySelector('.reply').addEventListener('click', () => {
-      reply_email(email)
-    });
+    document.querySelector('#email').append(emailDetail)
 
 
+// Listen for archive button
+  document.querySelector('.archive').onclick = () => {
+    archive_email(email)
+  }
+
+// Listen for replay button
+  document.querySelector('.reply').addEventListener('click', () => {
+    reply_email(email)
+  });
 });
-
-  
 }
 
 
@@ -171,25 +152,11 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
-    // Print emails
-    //console.log(emails)
+    let sender = emails.sender
+    if (mailbox === 'sent') {
+      sender = emails.recipients
 
-    if (mailbox === 'archive') {
-      emails.forEach(element => {
-        if (element.archived) {
-          emailTile = document.createElement('div');
-          emailTile.className = 'emailTile';
-          //console.log(element.read)
-        if (element.read){
-          emailTile.classList.add('read');
-        }
-        emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
-        document.querySelector('#emails-view').append(emailTile);
-        emailTile.onclick = openEmail 
-        }
-      });
-    }
-    else{
+      //console.log("hello");
       emails.forEach(element => {
         emailTile = document.createElement('div');
         emailTile.className = 'emailTile';
@@ -197,11 +164,48 @@ function load_mailbox(mailbox) {
         if (element.read){
           emailTile.classList.add('read');
         }
-        emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
+        emailTile.innerHTML = `<span class="senderTile">${element.recipients}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
         document.querySelector('#emails-view').append(emailTile);
         emailTile.onclick = openEmail
       });
     }
-      
+    else{
+    let archivedEmails = [];
+    let inboxEmails = [];
+
+    emails.forEach(element => {
+      if (element.archived) {
+        archivedEmails.push(element)
+      }
+      else{
+        inboxEmails.push(element)
+      }
+    });
+    //console.log(inboxEmails)
+    //console.log(archivedEmails)
+
+    if (mailbox === 'archive') {
+      buildEmailsView(archivedEmails);
+    }
+    else{
+      buildEmailsView(inboxEmails)
+    }
+    }
+    //console.log(emails)  
 });
+}
+
+function buildEmailsView(emailsList, sender) {
+  emailsList.forEach(element => {
+    emailTile = document.createElement('div');
+    emailTile.className = 'emailTile';
+    //console.log(element.read)
+    if (element.read){
+      emailTile.classList.add('read');
+    }
+    emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
+    document.querySelector('#emails-view').append(emailTile);
+    emailTile.onclick = openEmail
+  });
+  
 }
