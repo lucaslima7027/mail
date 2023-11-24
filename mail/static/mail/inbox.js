@@ -110,6 +110,7 @@ function openEmail(event) {
     document.querySelector('#email').innerHTML = ""
 
     emailDetail.innerHTML = `<div class="sender">From: ${email.sender}</div>
+                            <div class="sender">To: ${email.recipients}</div>
                             <div class="subject" data-id="${id}">Subject: ${email.subject}</div>
                             <div class="body">${email.body}</div>
                             <button class="reply">Reply</button>`
@@ -152,22 +153,8 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
-    let sender = emails.sender
     if (mailbox === 'sent') {
-      sender = emails.recipients
-
-      //console.log("hello");
-      emails.forEach(element => {
-        emailTile = document.createElement('div');
-        emailTile.className = 'emailTile';
-        //console.log(element.read)
-        if (element.read){
-          emailTile.classList.add('read');
-        }
-        emailTile.innerHTML = `<span class="senderTile">${element.recipients}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
-        document.querySelector('#emails-view').append(emailTile);
-        emailTile.onclick = openEmail
-      });
+      buildEmailsView(emails, mailbox);
     }
     else{
     let archivedEmails = [];
@@ -185,17 +172,18 @@ function load_mailbox(mailbox) {
     //console.log(archivedEmails)
 
     if (mailbox === 'archive') {
-      buildEmailsView(archivedEmails);
+      buildEmailsView(archivedEmails, mailbox);
     }
     else{
-      buildEmailsView(inboxEmails)
+      buildEmailsView(inboxEmails, mailbox)
     }
     }
     //console.log(emails)  
 });
 }
 
-function buildEmailsView(emailsList, sender) {
+function buildEmailsView(emailsList, mailbox) {
+  let sender
   emailsList.forEach(element => {
     emailTile = document.createElement('div');
     emailTile.className = 'emailTile';
@@ -203,7 +191,13 @@ function buildEmailsView(emailsList, sender) {
     if (element.read){
       emailTile.classList.add('read');
     }
-    emailTile.innerHTML = `<span class="senderTile">${element.sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
+    if (mailbox === 'sent') {
+      sender = element.recipients
+    }
+    else{
+      sender = element.sender
+    }
+    emailTile.innerHTML = `<span class="senderTile">${sender}</span>|<span data-id="${element.id}" class="subjectTile">${element.subject}</span><span class="timeTile">${element.timestamp}</span>`;
     document.querySelector('#emails-view').append(emailTile);
     emailTile.onclick = openEmail
   });
