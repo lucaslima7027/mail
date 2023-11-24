@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => {compose_email()} );
 
   // Listen for subbmit button
   document.querySelector('#compose-form').onsubmit = sent_email
@@ -13,20 +13,26 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
-function reply_email(email) {
-  //console.log(email)
-  compose_email();
 
+ // Fills out the compose form 
+function reply_email(email) {
   
-    document.querySelector('#compose-recipients').value = email.sender;
-    document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
-    document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n----------------------------------------------------------------------------------------------------------------------------\n`;
+  //console.log(email)
+  
+  let composeRecipients = email.sender;
+  let composeSubject = `Re: ${email.subject}`;
+  let composeBody = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n----------------------------------------------------------------------------------------------------------------------------\n`;
+
+  compose_email(composeRecipients, composeSubject, composeBody);
 
   
 }
 
+// Archive or unarchive an email
 function archive_email(email) {
+
   //console.log(id)
+
   let archived = true
   if (email.archived) {
     archived = false
@@ -43,7 +49,8 @@ function archive_email(email) {
   location.reload() 
 }
 
-function compose_email() {
+// Load the compose email view
+function compose_email(composeRecipients = "", composeSubject = "", composeBody = "") {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
@@ -51,21 +58,19 @@ function compose_email() {
   document.querySelector('#email').style.display = 'none';
 
   // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
-  document.querySelector('#compose-body').value = '';
+  document.querySelector('#compose-recipients').value = composeRecipients;
+  document.querySelector('#compose-subject').value = composeSubject;
+  document.querySelector('#compose-body').value = composeBody;
 }
 
-
-
-
+// Send a POST request to the API to send an email
 function sent_email() {
   const recipients = document.querySelector('#compose-recipients').value;
   const subject = document.querySelector('#compose-subject').value;
   const body = document.querySelector('#compose-body').value;
+
   //console.log(recipients, subject, body)
 
-// Post email
   fetch('/emails', {
     method: 'POST',
     body: JSON.stringify({
@@ -76,13 +81,16 @@ function sent_email() {
   })
   .then(response => response.json())
   .then(result => {
-      // Print result
+
       //console.log(result);
+
       load_mailbox('sent');
   });
   return false;
 }
 
+
+// Load email details
 function openEmail(event) {
   let email = event.currentTarget
   email = email.querySelector('.subjectTile')
@@ -136,10 +144,9 @@ function openEmail(event) {
 });
 }
 
-
+// Load the mailbox and hide other views
 function load_mailbox(mailbox) {
   
-  // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#email').style.display = 'none';
@@ -148,11 +155,12 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
   //Get mailbox content
-  
 
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
+
+    //Checks which mail box is requested
     if (mailbox === 'sent') {
       buildEmailsView(emails, mailbox);
     }
@@ -182,6 +190,7 @@ function load_mailbox(mailbox) {
 });
 }
 
+// Build the requested mailbox
 function buildEmailsView(emailsList, mailbox) {
   let sender
   emailsList.forEach(element => {
