@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
  // Fills out the compose form 
 function reply_email(email) {
-  
+
   //console.log(email)
   
   let composeRecipients = email.sender;
   let composeSubject = `Re: ${email.subject}`;
-  let composeBody = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n----------------------------------------------------------------------------------------------------------------------------\n`;
+  let composeBody = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n`;
 
   compose_email(composeRecipients, composeSubject, composeBody);
 
