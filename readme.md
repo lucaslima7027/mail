@@ -1,4 +1,4 @@
-# E-mail\
+# E-mail
 This project is a web app mail.\
 The backend is built using Django.\
 The frontend is a Single Page Application using only HTML, CSS and JS.\
